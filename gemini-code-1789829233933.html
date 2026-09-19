@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Life OS | نظامي الشخصي</title>
+  
+  <!-- إعدادات تطبيق الهاتف (PWA) ليعمل كأيقونة حقيقية بملء الشاشة -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Life OS">
+  <meta name="theme-color" content="#0b0d10">
+  <link rel="apple-touch-icon" href="https://api.iconify.design/solar:atom-bold-duotone.svg?color=%23818cf8">
+  <link rel="icon" type="image/svg+xml" href="https://api.iconify.design/solar:atom-bold-duotone.svg?color=%23818cf8">
+
+  <!-- مكتبات التصميم والأيقونات -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+    
+    * {
+      font-family: 'Tajawal', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background-color: #0b0d10;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .gemini-card {
+      background: rgba(18, 21, 27, 0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+    }
+
+    .gemini-card-subtle {
+      background: rgba(28, 32, 40, 0.5);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* هالات الضوء الخلفية المتحركة */
+    .glow-blob-1 {
+      position: fixed;
+      top: -10%;
+      right: -15%;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, rgba(168, 85, 247, 0.12) 50%, transparent 70%);
+      filter: blur(80px);
+      animation: float-1 14s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-blob-2 {
+      position: fixed;
+      top: 40%;
+      left: -20%;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.22) 0%, rgba(59, 130, 246, 0.12) 50%, transparent 70%);
+      filter: blur(85px);
+      animation: float-2 18s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-blob-3 {
+      position: fixed;
+      bottom: 5%;
+      right: -10%;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 70%);
+      filter: blur(75px);
+      animation: float-3 16s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float-1 {
+      0% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(-40px, 50px) scale(1.1); }
+      100% { transform: translate(-80px, 20px) scale(0.95); }
+    }
+
+    @keyframes float-2 {
+      0% { transform: translate(0px, 0px) scale(1); }
+      50% { transform: translate(50px, -40px) scale(1.1); }
+      100% { transform: translate(20px, 40px) scale(0.9); }
+    }
+
+    @keyframes float-3 {
+      0% { transform: translate(0px, 0px) scale(0.95); }
+      100% { transform: translate(-50px, -50px) scale(1.1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-32 relative selection:bg-indigo-500 selection:text-white">
+
+  <!-- أضواء الخلفية -->
+  <div class="glow-blob-1"></div>
+  <div class="glow-blob-2"></div>
+  <div class="glow-blob-3"></div>
+
+  <div class="relative z-10 max-w-md mx-auto">
+
+    <!-- شريط القيادة العلوي اليومي -->
+    <header class="p-5 pb-2 space-y-3">
+      <div class="flex justify-between items-center gemini-card p-4 rounded-3xl">
+        <div>
+          <h1 id="clock" class="text-3xl font-black tracking-tight text-white">--:--</h1>
+          <p id="date" class="text-xs text-slate-400 font-medium mt-0.5">--</p>
+        </div>
+        <div class="text-left">
+          <div class="flex items-center gap-1.5 text-amber-400 justify-end">
+            <i class="fa-solid fa-cloud-sun text-lg"></i>
+            <span class="font-bold text-lg text-slate-100">32°م</span>
+          </div>
+          <span class="text-xs text-slate-400">الرياض • صحو</span>
+        </div>
+      </div>
+
+      <!-- مؤشر الموعد القادم -->
+      <div id="nextAppointmentBanner" class="gemini-card px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs border-r-2 border-r-indigo-400 cursor-pointer" onclick="switchTab('agenda')">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></div>
+          <span id="nextAppointmentText" class="text-slate-300 font-medium truncate max-w-[210px]">لا توجد مواعيد قادمة</span>
+        </div>
+        <span id="nextAppointmentTime" class="bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 px-2.5 py-0.5 rounded-full font-bold">--</span>
+      </div>
+
+      <!-- إجمالي السيولة والمحافظ -->
+      <div class="gemini-card p-3 rounded-2xl flex justify-between items-center cursor-pointer" onclick="switchTab('wallets')">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-indigo-400 text-sm"></i>
+          <span class="text-xs font-bold text-slate-300">إجمالي السيولة النقدية</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="headerTotalBalance" class="text-sm font-black text-emerald-400">0.00 ر.س</span>
+          <i class="fa-solid fa-chevron-left text-[10px] text-slate-500"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================== -->
+    <!-- 1. شاشة الدايت والتغذية -->
+    <!-- ========================================== -->
+    <section id="tab-diet" class="p-5 pt-2 space-y-4">
+      <div class="gemini-card p-5 rounded-3xl space-y-4 relative overflow-hidden">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              مؤشرات الدايت اليومي
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">الهدف: 2500 سعرة • 150 جم بروتين</p>
+          </div>
+          <button onclick="openModal('historyModal')" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-300 rounded-xl flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-chart-simple text-indigo-400"></i> السابق
+          </button>
+        </div>
+
+        <div class="space-y-3.5 pt-1">
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-1.5">
+              <span class="text-slate-300">السعرات المكتملة</span>
+              <span id="calLabel" class="text-emerald-400">0 / 2500 سعرة</span>
+            </div>
+            <div class="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-white/5">
+              <div id="calBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="gemini-card-subtle p-3 rounded-2xl">
+              <span class="text-[11px] text-slate-400 block mb-0.5">البروتين اليومي</span>
+              <span id="proteinLabel" class="text-sm font-bold text-indigo-300">0 / 150 جم</span>
+            </div>
+            <div class="gemini-card-subtle p-3 rounded-2xl">
+              <span class="text-[11px] text-slate-400 block mb-0.5">الكاربوهيدرات</span>
+              <span id="carbsLabel" class="text-sm font-bold text-sky-300">0 / 280 جم</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-center px-1">
+          <h3 class="font-bold text-sm text-slate-300">الوجبات المجدولة</h3>
+          <span class="text-[11px] text-slate-500">انقر للتأكيد أو الإلغاء</span>
+        </div>
+
+        <div class="space-y-2.5" id="mealsList"></div>
+
+        <!-- أزرار الإضافة السريعة والذكية -->
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="openModal('adHocMealModal')" class="py-3 border border-dashed border-slate-700/80 hover:border-amber-400/50 hover:bg-amber-500/5 rounded-2xl text-xs font-bold text-slate-400 hover:text-amber-300 transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-cookie-bite text-amber-400"></i> وجبة عرضية
+          </button>
+          <button onclick="openModal('aiScanModal')" class="py-3 bg-gradient-to-r from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 hover:border-indigo-400 rounded-2xl text-xs font-bold text-indigo-300 transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> ماسح البطاقة (AI)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. شاشة التمارين واللياقة -->
+    <!-- ========================================== -->
+    <section id="tab-fitness" class="p-5 pt-2 space-y-4 hidden">
+      <div class="gemini-card p-5 rounded-3xl space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+              تمارين اليوم
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">تسجيل الأوزان والجولات</p>
+          </div>
+          <button onclick="openModal('addExerciseModal')" class="p-2 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> تمرين جديد
+          </button>
+        </div>
+
+        <div class="pt-2">
+          <div class="flex justify-between text-xs font-bold mb-1">
+            <span class="text-slate-400">نسبة إنهاء الجلسة</span>
+            <span id="workoutProgressLabel" class="text-indigo-300">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div id="workoutProgressBar" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2.5" id="exercisesList"></div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. شاشة المواعيد والمهام -->
+    <!-- ========================================== -->
+    <section id="tab-agenda" class="p-5 pt-2 space-y-5 hidden">
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-center px-1">
+          <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+            <i class="fa-regular fa-clock text-indigo-400"></i> المواعيد القادمة
+          </h3>
+          <button onclick="openModal('addAppointmentModal')" class="text-xs font-bold text-indigo-400 hover:text-indigo-300">
+            + موعد جديد
+          </button>
+        </div>
+        <div class="space-y-2" id="appointmentsList"></div>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-center px-1">
+          <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-emerald-400"></i> المهام اليومية
+          </h3>
+          <button onclick="openModal('addTaskModal')" class="text-xs font-bold text-emerald-400 hover:text-emerald-300">
+            + مهمة جديدة
+          </button>
+        </div>
+        <div class="space-y-2" id="tasksList"></div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. شاشة الأهداف والمشاريع -->
+    <!-- ========================================== -->
+    <section id="tab-goals" class="p-5 pt-2 space-y-5 hidden">
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-center px-1">
+          <div>
+            <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-bullseye text-rose-400"></i> الأهداف الرئيسية
+            </h3>
+            <p class="text-[10px] text-slate-500">أولويات ملزمة للتركيز</p>
+          </div>
+          <button onclick="openModal('addGoalModal')" class="text-xs font-bold text-rose-400">
+            + هدف رئيسي
+          </button>
+        </div>
+        <div class="space-y-2.5" id="goalsList"></div>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex justify-between items-center px-1">
+          <div>
+            <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-shapes text-sky-400"></i> المشاريع الجانبية
+            </h3>
+            <p class="text-[10px] text-slate-500">أفكار وتجارب تطويرية</p>
+          </div>
+          <button onclick="openModal('addProjectModal')" class="text-xs font-bold text-sky-400">
+            + مشروع جانبي
+          </button>
+        </div>
+        <div class="space-y-2.5" id="projectsList"></div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. شاشة المحافظ والسيولة -->
+    <!-- ========================================== -->
+    <section id="tab-wallets" class="p-5 pt-2 space-y-4 hidden">
+      <div class="gemini-card p-5 rounded-3xl flex justify-between items-center">
+        <div>
+          <span class="text-xs text-slate-400 block mb-0.5">إجمالي السيولة الحالية</span>
+          <h2 id="totalBalancePage" class="text-2xl font-black text-emerald-400">0.00 ر.س</h2>
+        </div>
+        <button onclick="openModal('addWalletModal')" class="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold transition shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+          + بطاقة جديدة
+        </button>
+      </div>
+
+      <div class="space-y-2.5" id="walletsFullList"></div>
+    </section>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- شريط التنقل السفلي الثابت -->
+  <!-- ========================================== -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-[#101217]/85 backdrop-blur-xl border-t border-white/5 px-3 py-2">
+    <div class="max-w-md mx-auto grid grid-cols-5 gap-1 text-center">
+      <button onclick="switchTab('diet')" id="nav-diet" class="py-1.5 flex flex-col items-center gap-1 text-indigo-400">
+        <i class="fa-solid fa-utensils text-base"></i>
+        <span class="text-[10px] font-bold">الدايت</span>
+      </button>
+
+      <button onclick="switchTab('fitness')" id="nav-fitness" class="py-1.5 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+        <i class="fa-solid fa-dumbbell text-base"></i>
+        <span class="text-[10px] font-bold">التمارين</span>
+      </button>
+
+      <button onclick="switchTab('agenda')" id="nav-agenda" class="py-1.5 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+        <i class="fa-regular fa-calendar-check text-base"></i>
+        <span class="text-[10px] font-bold">المواعيد</span>
+      </button>
+
+      <button onclick="switchTab('goals')" id="nav-goals" class="py-1.5 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+        <i class="fa-solid fa-crosshairs text-base"></i>
+        <span class="text-[10px] font-bold">الأهداف</span>
+      </button>
+
+      <button onclick="switchTab('wallets')" id="nav-wallets" class="py-1.5 flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300">
+        <i class="fa-solid fa-wallet text-base"></i>
+        <span class="text-[10px] font-bold">المحافظ</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- النوافذ المنبثقة الإضافية -->
+  <!-- ========================================== -->
+
+  <!-- نافذة ماسح البطاقة الذكي (AI Scanner) -->
+  <div id="aiScanModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3.5 border border-white/10">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-indigo-400 text-sm"></i>
+          <h4 class="font-bold text-sm text-white">استخراج البيانات بالذكاء الاصطناعي</h4>
+        </div>
+        <button onclick="closeModal('aiScanModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500/60 p-4 rounded-2xl text-center cursor-pointer transition" onclick="document.getElementById('nutritionImg').click()">
+        <i class="fa-solid fa-camera text-2xl text-indigo-400 mb-1"></i>
+        <p class="text-xs text-slate-300 font-bold">ارفع صورة البطاقة الغذائية للمنتج</p>
+        <p class="text-[10px] text-slate-500">أو صورة الصنف من الخلف لقراءة السعرات تلقائياً</p>
+        <input type="file" id="nutritionImg" accept="image/*" class="hidden" onchange="handleImageSelection(this)">
+      </div>
+
+      <div id="selectedImageName" class="text-[11px] text-emerald-400 text-center hidden"></div>
+
+      <input id="aiMealName" type="text" placeholder="اسم الوجبة (مثلاً: زبادي بروتين، مكمل)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+
+      <button id="aiProcessBtn" onclick="processAILink()" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-xs font-bold text-white rounded-xl transition shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+        معالجة وإضافة الوجبة فوراً
+      </button>
+    </div>
+  </div>
+
+  <!-- نافذة سجل الشهر (السابق) -->
+  <div id="historyModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-4 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white flex items-center gap-2">
+          <i class="fa-solid fa-chart-line text-indigo-400"></i> سجل التغذية الشهري
+        </h4>
+        <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="bg-slate-900/60 p-3 rounded-2xl flex justify-between items-center text-xs">
+        <span class="text-slate-400">متوسط البروتين اليومي</span>
+        <span class="font-bold text-indigo-300">146 جم / يوم</span>
+      </div>
+
+      <div class="space-y-2 max-h-56 overflow-y-auto no-scrollbar" id="historyLogList">
+        <!-- الأيام السابقة تتولد برمجياً -->
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة وجبة عرضية -->
+  <div id="adHocMealModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">تسجيل وجبة خارج الخطة</h4>
+        <button onclick="closeModal('adHocMealModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="adhocName" type="text" placeholder="اسم الوجبة" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <div class="grid grid-cols-2 gap-2">
+        <input id="adhocCal" type="number" placeholder="السعرات" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+        <input id="adhocProtein" type="number" placeholder="البروتين (جم)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      </div>
+      <button onclick="saveAdHocMeal()" class="w-full py-3 bg-amber-500 text-xs font-bold text-slate-950 rounded-xl">إضافة لسعرات اليوم</button>
+    </div>
+  </div>
+
+  <!-- بقية النوافذ (المواعيد، المهام، التمارين، الأهداف، والمحافظ) -->
+  <div id="addAppointmentModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">تسجيل موعد جديد</h4>
+        <button onclick="closeModal('addAppointmentModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="appTitle" type="text" placeholder="عنوان الموعد" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <input id="appTime" type="text" placeholder="الوقت / التاريخ (مثلاً: اليوم 5:00 م)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <button onclick="saveAppointment()" class="w-full py-3 bg-indigo-500 text-xs font-bold text-white rounded-xl">حفظ الموعد</button>
+    </div>
+  </div>
+
+  <div id="addTaskModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">إضافة مهمة</h4>
+        <button onclick="closeModal('addTaskModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="taskTitle" type="text" placeholder="نص المهمة" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <button onclick="saveTask()" class="w-full py-3 bg-emerald-500 text-xs font-bold text-slate-950 rounded-xl">إضافة المهمة</button>
+    </div>
+  </div>
+
+  <div id="addExerciseModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">إضافة تمرين</h4>
+        <button onclick="closeModal('addExerciseModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="exName" type="text" placeholder="اسم التمرين" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <div class="grid grid-cols-2 gap-2">
+        <input id="exSets" type="text" placeholder="الجولات × العدات (4x10)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+        <input id="exWeight" type="text" placeholder="الوزن (75 كجم)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      </div>
+      <button onclick="saveExercise()" class="w-full py-3 bg-indigo-500 text-xs font-bold text-white rounded-xl">حفظ التمرين</button>
+    </div>
+  </div>
+
+  <div id="addGoalModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">إضافة هدف رئيسي</h4>
+        <button onclick="closeModal('addGoalModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="goalTitle" type="text" placeholder="عنوان الهدف" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <input id="goalProgress" type="number" placeholder="نسبة الإنجاز %" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <button onclick="saveGoal()" class="w-full py-3 bg-rose-500 text-xs font-bold text-white rounded-xl">حفظ الهدف</button>
+    </div>
+  </div>
+
+  <div id="addProjectModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">إضافة مشروع جانبي</h4>
+        <button onclick="closeModal('addProjectModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="projectTitle" type="text" placeholder="اسم المشروع" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <input id="projectProgress" type="number" placeholder="نسبة الإنجاز %" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <button onclick="saveProject()" class="w-full py-3 bg-sky-500 text-xs font-bold text-white rounded-xl">حفظ المشروع</button>
+    </div>
+  </div>
+
+  <div id="addWalletModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+    <div class="gemini-card bg-[#14171d] p-5 rounded-3xl max-w-sm w-full space-y-3 border border-white/10">
+      <div class="flex justify-between items-center">
+        <h4 class="font-bold text-sm text-white">إضافة بطاقة / محفظة</h4>
+        <button onclick="closeModal('addWalletModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input id="newWalletName" type="text" placeholder="اسم المحفظة (برق، يوربي، كاش)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <input id="newWalletAmount" type="number" placeholder="الرصيد المالي (ر.س)" class="w-full bg-[#1b1f27] text-xs text-white p-3 rounded-xl border border-white/5 outline-none">
+      <button onclick="saveWallet()" class="w-full py-3 bg-emerald-500 text-xs font-bold text-slate-950 rounded-xl">إضافة المحفظة</button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- المحرك البرمجي وحفظ البيانات -->
+  <!-- ========================================== -->
+  <script>
+    let wallets = JSON.parse(localStorage.getItem('wallets')) || [
+      { id: 1, name: 'محفظة برق (Barq)', amount: 1250 },
+      { id: 2, name: 'محفظة يوربي (Urpay)', amount: 480 }
+    ];
+
+    let meals = JSON.parse(localStorage.getItem('dailyMeals')) || [
+      { id: 1, name: 'فطور: شوفان بحليب لوز + 4 بيضات', cal: 450, protein: 32, carbs: 45, eaten: false },
+      { id: 2, name: 'غداء: صدر دجاج مشوي + أرز بسمتي', cal: 650, protein: 48, carbs: 60, eaten: false },
+      { id: 3, name: 'سناك: زبادي يوناني + مكسرات نيئة', cal: 220, protein: 18, carbs: 12, eaten: false },
+      { id: 4, name: 'عشاء: تونة مصفاة + سلطة خضراء مع زيت زيتون', cal: 380, protein: 35, carbs: 10, eaten: false }
+    ];
+
+    let exercises = JSON.parse(localStorage.getItem('exercises')) || [
+      { id: 1, name: 'بنش برس مستوي (Barbell Bench Press)', details: '4 جولات × 8-10 عدات', weight: '75 كجم', done: false },
+      { id: 2, name: 'سحب ظهر أرضي (Barbell Rows)', details: '4 جولات × 10 عدات', weight: '65 كجم', done: false },
+      { id: 3, name: 'ضغط أكتاف بالدمبل (Shoulder Press)', details: '3 جولات × 12 عدة', weight: '22 كجم', done: false },
+      { id: 4, name: 'كارديو سير (Incline Treadmill)', details: '15 دقيقة • انحدار 10', weight: 'سرعة 5.5', done: false }
+    ];
+
+    let appointments = JSON.parse(localStorage.getItem('appointments')) || [
+      { id: 1, title: 'مناقشة خطة المشروع والعمليات', time: 'اليوم 4:00 م' }
+    ];
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [
+      { id: 1, title: 'تأكيد جدول الشحنات الأسبوعي', done: false },
+      { id: 2, title: 'شراء مكمل البروتين وأوميغا 3', done: true }
+    ];
+
+    let goals = JSON.parse(localStorage.getItem('coreGoals')) || [
+      { id: 1, title: 'الوصول لنسبة عضل مثالية وخفض الدهون', progress: 65 },
+      { id: 2, title: 'تأسيس صندوق الطوارئ والادخار', progress: 40 }
+    ];
+
+    let projects = JSON.parse(localStorage.getItem('sideProjects')) || [
+      { id: 1, title: 'تطوير تطبيق النظام الشخصي (Life OS)', progress: 85 }
+    ];
+
+    const targets = { cal: 2500, protein: 150, carbs: 280 };
+
+    function switchTab(tabId) {
+      const tabs = ['diet', 'fitness', 'agenda', 'goals', 'wallets'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`nav-${t}`);
+        btn.classList.remove('text-indigo-400');
+        btn.classList.add('text-slate-500');
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      activeBtn.classList.remove('text-slate-500');
+      activeBtn.classList.add('text-indigo-400');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.replace('hidden', 'flex'); }
+    function closeModal(id) { document.getElementById(id).classList.replace('flex', 'hidden'); }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').innerText = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('date').innerText = now.toLocaleDateString('ar-SA', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // المحافظ
+    function renderWallets() {
+      let total = 0;
+      const fullList = document.getElementById('walletsFullList');
+      fullList.innerHTML = '';
+
+      wallets.forEach((w, index) => {
+        total += Number(w.amount);
+        fullList.innerHTML += `
+          <div class="gemini-card p-4 rounded-2xl flex justify-between items-center">
+            <div onclick="editWalletAmount(${index})" class="cursor-pointer flex-1">
+              <p class="text-xs text-slate-400">${w.name}</p>
+              <p class="text-base font-bold text-white mt-0.5">${Number(w.amount).toLocaleString()} <span class="text-xs text-slate-400">ر.س</span></p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="editWalletAmount(${index})" class="p-2 text-slate-400 hover:text-indigo-300"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="deleteWallet(${w.id})" class="p-2 text-slate-500 hover:text-rose-400"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>
+        `;
+      });
+
+      const formatted = total.toLocaleString() + ' ر.س';
+      document.getElementById('headerTotalBalance').innerText = formatted;
+      document.getElementById('totalBalancePage').innerText = formatted;
+    }
+
+    function editWalletAmount(index) {
+      const val = prompt(`تعديل رصيد ${wallets[index].name}:`, wallets[index].amount);
+      if (val !== null && !isNaN(val)) {
+        wallets[index].amount = Number(val);
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+        renderWallets();
+      }
+    }
+
+    function deleteWallet(id) {
+      if (confirm('حذف هذه المحفظة؟')) {
+        wallets = wallets.filter(w => w.id !== id);
+        localStorage.setItem('wallets', JSON.stringify(wallets));
+        renderWallets();
+      }
+    }
+
+    function saveWallet() {
+      const name = document.getElementById('newWalletName').value;
+      const amount = Number(document.getElementById('newWalletAmount').value);
+      if (!name) return alert('أدخل اسم المحفظة');
+      wallets.push({ id: Date.now(), name, amount: amount || 0 });
+      localStorage.setItem('wallets', JSON.stringify(wallets));
+      renderWallets();
+      closeModal('addWalletModal');
+      document.getElementById('newWalletName').value = '';
+      document.getElementById('newWalletAmount').value = '';
+    }
+
+    // الدايت
+    function renderMeals() {
+      const container = document.getElementById('mealsList');
+      container.innerHTML = '';
+      let consumedCal = 0, consumedProtein = 0, consumedCarbs = 0;
+
+      meals.forEach(m => {
+        if (m.eaten) {
+          consumedCal += m.cal;
+          consumedProtein += m.protein;
+          consumedCarbs += (m.carbs || 0);
+        }
+
+        container.innerHTML += `
+          <div onclick="toggleMeal(${m.id})" class="p-4 rounded-2xl flex items-center justify-between cursor-pointer transition-all ${m.eaten ? 'bg-indigo-950/20 border border-indigo-500/30' : 'gemini-card hover:border-slate-500/40'}">
+            <div class="flex items-center gap-3">
+              <div class="w-5 h-5 rounded-lg flex items-center justify-center transition-all ${m.eaten ? 'bg-indigo-500 text-white shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'border border-slate-600 text-transparent'}">
+                <i class="fa-solid fa-check text-[10px]"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold ${m.eaten ? 'line-through text-slate-400' : 'text-slate-200'}">${m.name}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">${m.cal} سعرة • ${m.protein}جم بروتين</p>
+              </div>
+            </div>
+            ${m.adhoc ? '<span class="text-[10px] bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md">عرضية</span>' : ''}
+          </div>
+        `;
+      });
+
+      document.getElementById('calLabel').innerText = `${consumedCal} / ${targets.cal} سعرة`;
+      const calPercent = Math.min((consumedCal / targets.cal) * 100, 100);
+      document.getElementById('calBar').style.width = calPercent + '%';
+      document.getElementById('proteinLabel').innerText = `${consumedProtein} / ${targets.protein} جم`;
+      document.getElementById('carbsLabel').innerText = `${consumedCarbs} / ${targets.carbs} جم`;
+    }
+
+    function toggleMeal(id) {
+      meals = meals.map(m => m.id === id ? { ...m, eaten: !m.eaten } : m);
+      localStorage.setItem('dailyMeals', JSON.stringify(meals));
+      renderMeals();
+    }
+
+    function saveAdHocMeal() {
+      const name = document.getElementById('adhocName').value;
+      const cal = Number(document.getElementById('adhocCal').value);
+      const protein = Number(document.getElementById('adhocProtein').value);
+      if (!name || !cal) return alert('يرجى كتابة اسم الوجبة والسعرات');
+
+      meals.push({ id: Date.now(), name, cal, protein: protein || 0, carbs: 0, eaten: true, adhoc: true });
+      localStorage.setItem('dailyMeals', JSON.stringify(meals));
+      renderMeals();
+      closeModal('adHocMealModal');
+      document.getElementById('adhocName').value = '';
+      document.getElementById('adhocCal').value = '';
+      document.getElementById('adhocProtein').value = '';
+    }
+
+    // الذكاء الاصطناعي لمسح الوجبات
+    function handleImageSelection(input) {
+      if (input.files && input.files[0]) {
+        const nameBadge = document.getElementById('selectedImageName');
+        nameBadge.innerText = 'تم اختيار: ' + input.files[0].name;
+        nameBadge.classList.remove('hidden');
+      }
+    }
+
+    function processAILink() {
+      const name = document.getElementById('aiMealName').value || 'وجبة مستخلصة بالذكاء الاصطناعي';
+      const btn = document.getElementById('aiProcessBtn');
+      btn.innerText = 'جاري تحليل بيانات البطاقة...';
+
+      setTimeout(() => {
+        // محاكاة استخلاص تلقائي ذكي للقيم من الجدول
+        const mockCal = Math.floor(Math.random() * (450 - 250) + 250);
+        const mockProtein = Math.floor(Math.random() * (35 - 18) + 18);
+        const mockCarbs = Math.floor(Math.random() * (40 - 10) + 10);
+
+        meals.push({
+          id: Date.now(),
+          name: name + ' (AI)',
+          cal: mockCal,
+          protein: mockProtein,
+          carbs: mockCarbs,
+          eaten: true
+        });
+
+        localStorage.setItem('dailyMeals', JSON.stringify(meals));
+        renderMeals();
+        btn.innerText = 'معالجة وإضافة الوجبة فوراً';
+        closeModal('aiScanModal');
+        document.getElementById('aiMealName').value = '';
+        document.getElementById('selectedImageName').classList.add('hidden');
+      }, 1000);
+    }
+
+    // سجل الشهر (السابق)
+    function renderHistory() {
+      const container = document.getElementById('historyLogList');
+      container.innerHTML = '';
+      const days = [
+        { date: 'أمس', cal: 2480, p: 152 },
+        { date: 'قبل يومين', cal: 2510, p: 148 },
+        { date: 'قبل 3 أيام', cal: 2390, p: 140 },
+        { date: 'قبل 4 أيام', cal: 2550, p: 155 }
+      ];
+
+      days.forEach(d => {
+        container.innerHTML += `
+          <div class="p-3 bg-slate-900/40 rounded-xl flex justify-between items-center text-xs">
+            <span class="text-slate-300 font-medium">${d.date}</span>
+            <span class="text-emerald-400 font-bold">${d.cal} سعرة • <span class="text-indigo-300">${d.p}جم بروتين</span></span>
+          </div>
+        `;
+      });
+    }
+
+    // التمارين
+    function renderExercises() {
+      const container = document.getElementById('exercisesList');
+      container.innerHTML = '';
+      let completed = 0;
+
+      exercises.forEach(e => {
+        if (e.done) completed++;
+        container.innerHTML += `
+          <div class="gemini-card p-4 rounded-2xl flex items-center justify-between transition-all ${e.done ? 'border-emerald-500/30 bg-emerald-950/10' : ''}">
+            <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="toggleExercise(${e.id})">
+              <div class="w-5 h-5 rounded-lg flex items-center justify-center ${e.done ? 'bg-emerald-500 text-slate-950' : 'border border-slate-600 text-transparent'}">
+                <i class="fa-solid fa-check text-[10px]"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold ${e.done ? 'line-through text-slate-400' : 'text-slate-200'}">${e.name}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">${e.details} • <span class="text-indigo-300 font-semibold">${e.weight}</span></p>
+              </div>
+            </div>
+            <button onclick="deleteExercise(${e.id})" class="text-slate-600 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        `;
+      });
+
+      const percent = exercises.length ? Math.round((completed / exercises.length) * 100) : 0;
+      document.getElementById('workoutProgressLabel').innerText = `${percent}% (${completed}/${exercises.length})`;
+      document.getElementById('workoutProgressBar').style.width = `${percent}%`;
+    }
+
+    function toggleExercise(id) {
+      exercises = exercises.map(e => e.id === id ? { ...e, done: !e.done } : e);
+      localStorage.setItem('exercises', JSON.stringify(exercises));
+      renderExercises();
+    }
+
+    function deleteExercise(id) {
+      exercises = exercises.filter(e => e.id !== id);
+      localStorage.setItem('exercises', JSON.stringify(exercises));
+      renderExercises();
+    }
+
+    function saveExercise() {
+      const name = document.getElementById('exName').value;
+      const details = document.getElementById('exSets').value;
+      const weight = document.getElementById('exWeight').value;
+      if (!name) return alert('أدخل اسم التمرين');
+
+      exercises.push({ id: Date.now(), name, details: details || '3 جولات', weight: weight || '-', done: false });
+      localStorage.setItem('exercises', JSON.stringify(exercises));
+      renderExercises();
+      closeModal('addExerciseModal');
+      document.getElementById('exName').value = '';
+      document.getElementById('exSets').value = '';
+      document.getElementById('exWeight').value = '';
+    }
+
+    // المواعيد والمهام
+    function renderAppointments() {
+      const container = document.getElementById('appointmentsList');
+      container.innerHTML = '';
+
+      if (appointments.length > 0) {
+        document.getElementById('nextAppointmentText').innerText = appointments[0].title;
+        document.getElementById('nextAppointmentTime').innerText = appointments[0].time;
+      } else {
+        document.getElementById('nextAppointmentText').innerText = 'لا توجد مواعيد قادمة';
+        document.getElementById('nextAppointmentTime').innerText = '--';
+      }
+
+      appointments.forEach(a => {
+        container.innerHTML += `
+          <div class="gemini-card p-3.5 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-calendar-day text-indigo-400 text-xs"></i>
+              <div>
+                <p class="text-xs font-bold text-slate-200">${a.title}</p>
+                <p class="text-[10px] text-slate-400">${a.time}</p>
+              </div>
+            </div>
+            <button onclick="deleteAppointment(${a.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+      });
+    }
+
+    function saveAppointment() {
+      const title = document.getElementById('appTitle').value;
+      const time = document.getElementById('appTime').value;
+      if (!title || !time) return alert('أدخل تفاصيل الموعد');
+      appointments.push({ id: Date.now(), title, time });
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+      renderAppointments();
+      closeModal('addAppointmentModal');
+      document.getElementById('appTitle').value = '';
+      document.getElementById('appTime').value = '';
+    }
+
+    function deleteAppointment(id) {
+      appointments = appointments.filter(a => a.id !== id);
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+      renderAppointments();
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasksList');
+      container.innerHTML = '';
+      tasks.forEach(t => {
+        container.innerHTML += `
+          <div class="gemini-card p-3 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="toggleTask(${t.id})">
+              <div class="w-4 h-4 rounded-md flex items-center justify-center ${t.done ? 'bg-emerald-500 text-slate-950' : 'border border-slate-600'}">
+                <i class="fa-solid fa-check text-[9px]"></i>
+              </div>
+              <p class="text-xs ${t.done ? 'line-through text-slate-500' : 'text-slate-200'} font-medium">${t.title}</p>
+            </div>
+            <button onclick="deleteTask(${t.id})" class="text-slate-600 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+        `;
+      });
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function saveTask() {
+      const title = document.getElementById('taskTitle').value;
+      if (!title) return alert('أدخل نص المهمة');
+      tasks.push({ id: Date.now(), title, done: false });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      renderTasks();
+      closeModal('addTaskModal');
+      document.getElementById('taskTitle').value = '';
+    }
+
+    // الأهداف والمشاريع
+    function renderGoalsAndProjects() {
+      const gContainer = document.getElementById('goalsList');
+      gContainer.innerHTML = '';
+      goals.forEach(g => {
+        gContainer.innerHTML += `
+          <div class="gemini-card p-4 rounded-2xl space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-200">${g.title}</span>
+              <span class="text-rose-400 font-bold">${g.progress}%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-rose-500 h-1.5 rounded-full" style="width: ${g.progress}%"></div>
+            </div>
+          </div>
+        `;
+      });
+
+      const pContainer = document.getElementById('projectsList');
+      pContainer.innerHTML = '';
+      projects.forEach(p => {
+        pContainer.innerHTML += `
+          <div class="gemini-card p-4 rounded-2xl space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-slate-200">${p.title}</span>
+              <span class="text-sky-400 font-bold">${p.progress}%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-sky-500 h-1.5 rounded-full" style="width: ${p.progress}%"></div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function saveGoal() {
+      const title = document.getElementById('goalTitle').value;
+      const progress = Number(document.getElementById('goalProgress').value) || 0;
+      if (!title) return alert('أدخل نص الهدف');
+      goals.push({ id: Date.now(), title, progress: Math.min(progress, 100) });
+      localStorage.setItem('coreGoals', JSON.stringify(goals));
+      renderGoalsAndProjects();
+      closeModal('addGoalModal');
+      document.getElementById('goalTitle').value = '';
+      document.getElementById('goalProgress').value = '';
+    }
+
+    function saveProject() {
+      const title = document.getElementById('projectTitle').value;
+      const progress = Number(document.getElementById('projectProgress').value) || 0;
+      if (!title) return alert('أدخل اسم المشروع');
+      projects.push({ id: Date.now(), title, progress: Math.min(progress, 100) });
+      localStorage.setItem('sideProjects', JSON.stringify(projects));
+      renderGoalsAndProjects();
+      closeModal('addProjectModal');
+      document.getElementById('projectTitle').value = '';
+      document.getElementById('projectProgress').value = '';
+    }
+
+    renderWallets();
+    renderMeals();
+    renderExercises();
+    renderAppointments();
+    renderTasks();
+    renderGoalsAndProjects();
+    renderHistory();
+  </script>
+</body>
+</html>
